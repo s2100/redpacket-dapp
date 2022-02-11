@@ -76,23 +76,28 @@ const RedPacket: Page = () => {
   const onSignCertificate = useCallback(async () => {
     console.log('onSignCertificate')
     if (account && api) {
-      try {
-        const signer = await getSigner(account)
+      console.log('certificateData', certificateData)
+      if (certificateData) {
+        toaster.positive('Certificate already signed', {})
+      } else {
+        try {
+          const signer = await getSigner(account)
 
-        // Save certificate data to state, or anywhere else you want like local storage
-        setCertificateData(
-          await signCertificate({
-            api,
-            account,
-            signer,
-          })
-        )
-        toaster.positive('Certificate signed', {})
-      } catch (err) {
-        toaster.negative((err as Error).message, {})
+          // Save certificate data to state, or anywhere else you want like local storage
+          setCertificateData(
+            await signCertificate({
+              api,
+              account,
+              signer,
+            })
+          )
+          toaster.positive('Certificate signed', {})
+        } catch (err) {
+          toaster.negative((err as Error).message, {})
+        }
       }
     }
-  }, [api, account])
+  }, [api, account, certificateData])
 
   const getBalance = () => {
     console.log('getBalance')
