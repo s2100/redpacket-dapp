@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0x64e6d8b00293973ccff37c9bcf1e7062f837087b2a39fb015b346fb4a9acc3b0",
+    "hash": "0xc889f7424cb4f6c90b89d9854a61f170f2e49f5f1172be47e4e081608e2200fa",
     "language": "ink! 3.0.0-rc8",
     "compiler": "rustc 1.60.0-nightly"
   },
@@ -26,23 +26,27 @@
       "events": [],
       "messages": [
         {
-          "args": [
-            {
-              "label": "value",
-              "type": {
-                "displayName": [
-                  "Balance"
-                ],
-                "type": 0
-              }
-            }
-          ],
+          "args": [],
           "docs": [],
           "label": "get_red_packet",
           "mutates": true,
           "payable": false,
           "returnType": null,
           "selector": "0x8cc2b487"
+        },
+        {
+          "args": [],
+          "docs": [],
+          "label": "get_balance",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "Balance"
+            ],
+            "type": 0
+          },
+          "selector": "0xea817e65"
         }
       ]
     },
