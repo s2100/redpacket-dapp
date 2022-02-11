@@ -1,32 +1,60 @@
+import accountAtom from 'atoms/account'
+
 import {useEffect, useState} from 'react'
 import {FormEventHandler, useCallback, useRef} from 'react'
-import type {ApiPromise} from '@polkadot/api'
-import {
-  create as createPhala,
-  randomHex,
-  signCertificate,
-  CertificateData,
-  PhalaInstance,
-} from '@phala/sdk'
-import {MoneyCollectOutlined, RightOutlined} from '@ant-design/icons'
-import {enablePolkadotExtension} from 'lib/polkadotExtension'
-import {createApi} from 'lib/polkadotApi'
+
+import {atomWithStorage} from 'jotai/utils'
 import {useAtom} from 'jotai'
-import accountAtom from 'atoms/account'
+
+import {create, signCertificate, CertificateData} from '@phala/sdk'
+
+import type {ApiPromise} from '@polkadot/api'
+import {ContractPromise} from '@polkadot/api-contract'
+
+import {MoneyCollectOutlined, RightOutlined} from '@ant-design/icons'
+
 import {getSigner} from 'lib/polkadotExtension'
+import contractMetadata from 'lib/redpacket.abi.json'
+import {createApi} from 'lib/polkadotApi'
+
 import {toaster} from 'baseui/toast'
-import {numberToHex, hexAddPrefix, u8aToHex} from '@polkadot/util'
 
 const baseURL = '/'
+const contractIdAtom = atomWithStorage<string>(
+  'contractId',
+  '0xcf4b9fd7eb64dc1fe5ca550e715a49fae9f5a2de88afd3c32daa137fcc8ca5b7'
+)
+const metadataStringAtom = atomWithStorage<string>(
+  'metadataString',
+  JSON.stringify(contractMetadata, null, 2)
+)
 
-const RedPacket = ({api, phala}: {api: ApiPromise; phala: PhalaInstance}) => {
+const RedPacket: Page = () => {
   const [account] = useAtom(accountAtom)
-  const [number, setNumber] = useState('')
+  const [contractId, setContractId] = useAtom(contractIdAtom)
+  const [metadataString, setMetadataString] = useAtom(metadataStringAtom)
   const [certificateData, setCertificateData] = useState<CertificateData>()
-  const [signCertificateLoading, setSignCertificateLoading] = useState(false)
-  const [guessLoading, setGuessLoading] = useState(false)
-  const [owner, setOwner] = useState('')
+  const [api, setApi] = useState<ApiPromise>()
+  const [contract, setContract] = useState<ContractPromise>()
   const unsubscribe = useRef<() => void>()
+
+  const loadContract = async () => {
+    try {
+      const api = await createApi({
+        endpoint: process.env.NEXT_PUBLIC_WS_ENDPOINT,
+      })
+      setApi(api)
+      const flipContract = new ContractPromise(
+        await create({api, baseURL, contractId}),
+        JSON.parse(metadataString),
+        contractId
+      )
+      setContract(flipContract)
+      toaster.positive('Contract created', {})
+    } catch (err) {
+      toaster.negative((err as Error).message, {})
+    }
+  }
 
   useEffect(() => {
     const _unsubscribe = unsubscribe.current
@@ -41,10 +69,11 @@ const RedPacket = ({api, phala}: {api: ApiPromise; phala: PhalaInstance}) => {
   }, [account])
 
   const onSignCertificate = useCallback(async () => {
-    if (account) {
-      setSignCertificateLoading(true)
+    if (account && api) {
       try {
         const signer = await getSigner(account)
+
+        // Save certificate data to state, or anywhere else you want like local storage
         setCertificateData(
           await signCertificate({
             api,
@@ -56,61 +85,25 @@ const RedPacket = ({api, phala}: {api: ApiPromise; phala: PhalaInstance}) => {
       } catch (err) {
         toaster.negative((err as Error).message, {})
       }
-      setSignCertificateLoading(false)
     }
   }, [api, account])
 
-  const onGuess = useCallback<FormEventHandler<HTMLFormElement>>(
-    (e) => {
-      e.preventDefault()
-      if (!certificateData) return
-      setGuessLoading(true)
-      const encodedQuery = api
-        .createType('GuessNumberRequest', {
-          head: {
-            id: numberToHex(CONTRACT_ID, 256),
-            nonce: hexAddPrefix(randomHex(32)),
-          },
-          data: {
-            guess: {
-              guess_number: Number(number),
-            },
-          },
-        })
-        .toHex()
+  const onQuery = () => {
+    if (!certificateData || !contract) return
+    contract.query.get(certificateData as any as string, {}).then((res) => {
+      toaster.info(JSON.stringify(res.output?.toHuman()), {})
+    })
+  }
 
-      phala
-        .query(encodedQuery, certificateData)
-        .then((data: any) => {
-          const {
-            result: {ok, err},
-          } = api
-            .createType('GuessNumberResponse', hexAddPrefix(data))
-            .toJSON() as any
-
-          if (ok) {
-            const {guessResult} = ok
-            if (guessResult === 'Correct') {
-              toaster.positive('Correct!', {})
-              setNumber('')
-            } else {
-              toaster.info(guessResult, {})
-            }
-          }
-
-          if (err) {
-            throw new Error(err)
-          }
-        })
-        .catch((err: Error) => {
-          toaster.negative((err as Error).message, {})
-        })
-        .finally(() => {
-          setGuessLoading(false)
-        })
-    },
-    [phala, api, number, certificateData]
-  )
+  const onCommand = async () => {
+    if (!contract || !account) return
+    const signer = await getSigner(account)
+    contract.tx.flip({}).signAndSend(account.address, {signer}, (status) => {
+      if (status.isInBlock) {
+        toaster.positive('In Block', {})
+      }
+    })
+  }
 
   return (
     <div>

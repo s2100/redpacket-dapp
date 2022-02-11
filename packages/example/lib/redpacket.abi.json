@@ -1,0 +1,65 @@
+{
+  "source": {
+    "hash": "0x64e6d8b00293973ccff37c9bcf1e7062f837087b2a39fb015b346fb4a9acc3b0",
+    "language": "ink! 3.0.0-rc8",
+    "compiler": "rustc 1.60.0-nightly"
+  },
+  "contract": {
+    "name": "red-packet",
+    "version": "0.1.0",
+    "authors": [
+      "Shawn Tian, hightian@gmail.com"
+    ]
+  },
+  "V3": {
+    "spec": {
+      "constructors": [
+        {
+          "args": [],
+          "docs": [],
+          "label": "new",
+          "payable": true,
+          "selector": "0x9bae9d5e"
+        }
+      ],
+      "docs": [],
+      "events": [],
+      "messages": [
+        {
+          "args": [
+            {
+              "label": "value",
+              "type": {
+                "displayName": [
+                  "Balance"
+                ],
+                "type": 0
+              }
+            }
+          ],
+          "docs": [],
+          "label": "get_red_packet",
+          "mutates": true,
+          "payable": false,
+          "returnType": null,
+          "selector": "0x8cc2b487"
+        }
+      ]
+    },
+    "storage": {
+      "struct": {
+        "fields": []
+      }
+    },
+    "types": [
+      {
+        "id": 0,
+        "type": {
+          "def": {
+            "primitive": "u128"
+          }
+        }
+      }
+    ]
+  }
+}
