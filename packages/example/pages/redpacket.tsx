@@ -22,7 +22,7 @@ import {toaster} from 'baseui/toast'
 const baseURL = '/'
 const contractIdAtom = atomWithStorage<string>(
   'contractId',
-  '0xcf4b9fd7eb64dc1fe5ca550e715a49fae9f5a2de88afd3c32daa137fcc8ca5b7'
+  '0x8b2a2317544507a21bfb395420e6e00b2902ce1329e3446da05882d0fcd07660'
 )
 const metadataStringAtom = atomWithStorage<string>(
   'metadataString',
@@ -40,21 +40,26 @@ const RedPacket: Page = () => {
 
   const loadContract = async () => {
     try {
+      let endpoint = process.env.NEXT_PUBLIC_WS_ENDPOINT
       const api = await createApi({
-        endpoint: process.env.NEXT_PUBLIC_WS_ENDPOINT,
+        endpoint: endpoint,
       })
       setApi(api)
-      const flipContract = new ContractPromise(
+      const redPacketContract = new ContractPromise(
         await create({api, baseURL, contractId}),
         JSON.parse(metadataString),
         contractId
       )
-      setContract(flipContract)
-      toaster.positive('Contract created', {})
+      setContract(redPacketContract)
+      toaster.positive('Contract Initialized', {})
     } catch (err) {
       toaster.negative((err as Error).message, {})
     }
   }
+
+  useEffect(() => {
+    loadContract()
+  }, [])
 
   useEffect(() => {
     const _unsubscribe = unsubscribe.current
@@ -69,6 +74,7 @@ const RedPacket: Page = () => {
   }, [account])
 
   const onSignCertificate = useCallback(async () => {
+    console.log('onSignCertificate')
     if (account && api) {
       try {
         const signer = await getSigner(account)
@@ -88,14 +94,16 @@ const RedPacket: Page = () => {
     }
   }, [api, account])
 
-  const onQuery = () => {
+  const getBalance = () => {
+    console.log('getBalance')
     if (!certificateData || !contract) return
     contract.query.get(certificateData as any as string, {}).then((res) => {
       toaster.info(JSON.stringify(res.output?.toHuman()), {})
     })
   }
 
-  const onCommand = async () => {
+  const getRedPacket = async () => {
+    console.log('getRedPacket')
     if (!contract || !account) return
     const signer = await getSigner(account)
     contract.tx.flip({}).signAndSend(account.address, {signer}, (status) => {
@@ -112,11 +120,15 @@ const RedPacket: Page = () => {
           <div className="redpacket-wrapper">
             <div className="redpacket">
               <div className="redpacket-balance-label">PHA Left</div>
-              <div className="redpacket-balance">237.5</div>
-              <div className="redpacket-desc">Get your lucky red packet!</div>
-              <button className="redpacket-get">
+              <div className="redpacket-balance" onClick={getBalance}>
+                237.5
+              </div>
+              <div className="redpacket-desc" onClick={onSignCertificate}>
+                Click to Sign Certificate
+              </div>
+              <button className="redpacket-get" onClick={getRedPacket}>
                 <MoneyCollectOutlined />
-                &nbsp; I&apos;m Lucky
+                &nbsp; lucky me
               </button>
               <div className="redpacket-donate">
                 <RightOutlined />
