@@ -8,3 +8,60 @@ body {
 * {
   box-sizing: border-box;
 }
+
+.red-packet-row {
+  height: 100vh;
+}
+
+.red-packet-col {
+  color: var(--redPacketColor);
+}
+
+.redpacket-wrapper {
+  display: flex;
+  height: 100vh;
+  justify-content: center;
+}
+
+.redpacket {
+  height: 500px;
+  width: 300px;
+  color: white;
+  background-color: #da3925;
+  border-radius: 15px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.redpacket-balance-label {
+  font-size: 20px;
+  font-weight: bold;
+  margin-top: 50px;
+}
+
+.redpacket-balance {
+  font-size: 50px;
+  font-weight: bold;
+  margin-top: 20px;
+}
+
+.redpacket-desc {
+  margin-top: 180px;
+  font-weight: 15px;
+}
+
+.redpacket-get {
+  margin-top: 10px;
+  color: red;
+  font-size: 30px;
+  padding: 5px 30px;
+  border-radius: 10px;
+  border-color: white;
+}
+
+.redpacket-donate {
+  font-size: 15px;
+  margin-top: 10px;
+}
