@@ -113,7 +113,7 @@ const RedPacket: Page = () => {
             <div className="redpacket">
               <div className="redpacket-balance-label">PHA Left</div>
               <div className="redpacket-balance">237.5</div>
-              <div className="redpacket-desc">Get random red packet!</div>
+              <div className="redpacket-desc">Get your lucky red packet!</div>
               <button className="redpacket-get">
                 <MoneyCollectOutlined />
                 &nbsp; I&apos;m Lucky
