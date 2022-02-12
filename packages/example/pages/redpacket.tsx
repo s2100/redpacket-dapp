@@ -22,17 +22,18 @@ import {toaster} from 'baseui/toast'
 const baseURL = '/'
 const contractIdAtom = atomWithStorage<string>(
   'contractId',
-  '0x8b2a2317544507a21bfb395420e6e00b2902ce1329e3446da05882d0fcd07660'
+  '0x2353dee3e8662fde73aafd487ab49146bfeb8128a177bafa988633b312baeffc'
+  // '0x8b2a2317544507a21bfb395420e6e00b2902ce1329e3446da05882d0fcd07660'
 )
-const metadataStringAtom = atomWithStorage<string>(
-  'metadataString',
-  JSON.stringify(contractMetadata, null, 2)
-)
+// const metadataStringAtom = atomWithStorage<string>(
+//   'metadataString',
+//   JSON.stringify(contractMetadata, null, 2)
+// )
 
 const RedPacket: Page = () => {
   const [account] = useAtom(accountAtom)
   const [contractId, setContractId] = useAtom(contractIdAtom)
-  const [metadataString, setMetadataString] = useAtom(metadataStringAtom)
+  // const [metadataString, setMetadataString] = useAtom(metadataStringAtom)
   const [certificateData, setCertificateData] = useState<CertificateData>()
   const [api, setApi] = useState<ApiPromise>()
   const [contract, setContract] = useState<ContractPromise>()
@@ -40,18 +41,18 @@ const RedPacket: Page = () => {
 
   const loadContract = async () => {
     try {
-      let endpoint = process.env.NEXT_PUBLIC_WS_ENDPOINT
       const api = await createApi({
-        endpoint: endpoint,
+        endpoint: process.env.NEXT_PUBLIC_WS_ENDPOINT,
       })
       setApi(api)
-      const redPacketContract = new ContractPromise(
+      const redpacketContract = new ContractPromise(
         await create({api, baseURL, contractId}),
-        JSON.parse(metadataString),
+        // JSON.parse(metadataString),
+        contractMetadata,
         contractId
       )
-      setContract(redPacketContract)
-      toaster.positive('Contract Initialized', {})
+      setContract(redpacketContract)
+      toaster.positive('Contract loaded', {})
     } catch (err) {
       toaster.negative((err as Error).message, {})
     }
@@ -74,9 +75,7 @@ const RedPacket: Page = () => {
   }, [account])
 
   const onSignCertificate = useCallback(async () => {
-    console.log('onSignCertificate')
     if (account && api) {
-      console.log('certificateData', certificateData)
       if (certificateData) {
         toaster.positive('Certificate already signed', {})
       } else {
@@ -100,8 +99,9 @@ const RedPacket: Page = () => {
   }, [api, account, certificateData])
 
   const getBalance = () => {
-    console.log('getBalance')
     if (!certificateData || !contract) return
+    console.log('contract', contract)
+    console.log('contract.query', contract.query)
     contract.query.get(certificateData as any as string, {}).then((res) => {
       toaster.info(JSON.stringify(res.output?.toHuman()), {})
     })
@@ -111,11 +111,13 @@ const RedPacket: Page = () => {
     console.log('getRedPacket')
     if (!contract || !account) return
     const signer = await getSigner(account)
-    contract.tx.flip({}).signAndSend(account.address, {signer}, (status) => {
-      if (status.isInBlock) {
-        toaster.positive('In Block', {})
-      }
-    })
+    contract.tx
+      .get_red_packet({})
+      .signAndSend(account.address, {signer}, (status) => {
+        if (status.isInBlock) {
+          toaster.positive('In Block', {})
+        }
+      })
   }
 
   return (
