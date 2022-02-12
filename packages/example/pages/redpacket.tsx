@@ -23,17 +23,11 @@ const baseURL = '/'
 const contractIdAtom = atomWithStorage<string>(
   'contractId',
   '0x2353dee3e8662fde73aafd487ab49146bfeb8128a177bafa988633b312baeffc'
-  // '0x8b2a2317544507a21bfb395420e6e00b2902ce1329e3446da05882d0fcd07660'
 )
-// const metadataStringAtom = atomWithStorage<string>(
-//   'metadataString',
-//   JSON.stringify(contractMetadata, null, 2)
-// )
 
 const RedPacket: Page = () => {
   const [account] = useAtom(accountAtom)
   const [contractId, setContractId] = useAtom(contractIdAtom)
-  // const [metadataString, setMetadataString] = useAtom(metadataStringAtom)
   const [certificateData, setCertificateData] = useState<CertificateData>()
   const [api, setApi] = useState<ApiPromise>()
   const [contract, setContract] = useState<ContractPromise>()
@@ -47,7 +41,6 @@ const RedPacket: Page = () => {
       setApi(api)
       const redpacketContract = new ContractPromise(
         await create({api, baseURL, contractId}),
-        // JSON.parse(metadataString),
         contractMetadata,
         contractId
       )
@@ -112,7 +105,7 @@ const RedPacket: Page = () => {
     if (!contract || !account) return
     const signer = await getSigner(account)
     contract.tx
-      .get_red_packet({})
+      .redpacket({})
       .signAndSend(account.address, {signer}, (status) => {
         if (status.isInBlock) {
           toaster.positive('In Block', {})
